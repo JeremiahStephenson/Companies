@@ -31,7 +31,7 @@ class HomeViewModel(
         null
     )
 
-    fun setFilter(sort: Sort) {
+    fun setSort(sort: Sort) {
         _sortFlow.value = sort
     }
 

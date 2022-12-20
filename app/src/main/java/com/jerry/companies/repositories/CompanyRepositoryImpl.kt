@@ -72,8 +72,8 @@ class CompanyRepositoryImpl(
     override fun getLocalCompaniesFlow(sort: Sort): Flow<PagingData<Company>> {
         return Pager(PagingConfig(40)) {
             when (sort) {
-                Sort.NAME -> companiesDao.getCompaniesWithRevenueByName()
-                Sort.ID -> companiesDao.getCompaniesWithRevenueById()
+                Sort.NAME -> companiesDao.getCompaniesByName()
+                Sort.ID -> companiesDao.getCompaniesById()
             }
         }.flow
     }

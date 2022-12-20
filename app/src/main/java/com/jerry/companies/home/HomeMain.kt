@@ -45,7 +45,6 @@ fun HomeMain(
     LocalAppBarTitle.current(stringResource(R.string.app_name))
 
     val homeState = getHomeState(viewModel)
-
     val isLoading by remember { derivedStateOf { homeState.loading?.isLoading == true } }
 
     // This is deprecated but the supported version from Google has some bugs
@@ -81,36 +80,9 @@ fun HomeMain(
                 }
             }
 
-            val isErrorVisible = remember { derivedStateOf {
-                homeState.loading?.isError == true && homeState.dataPaging.itemCount == 0
-            } }
-            FadeAnimatedVisibility(visible = isErrorVisible.value) {
-                ErrorIndicator {
-                    viewModel.refresh()
-                }
-            }
-
-            val isSortVisible = remember { derivedStateOf {
-                homeState.dataPaging.itemCount > 0
-            } }
-            FadeAnimatedVisibility(visible = isSortVisible.value) {
-                SortButton(
-                    sort = homeState.sort,
-                    onSort = { viewModel.setFilter(it) }
-                )
-            }
-
-            val isErrorDialogVisible = remember {
-                derivedStateOf { homeState.loading?.isError == true && homeState.dataPaging.itemCount > 0 }
-            }
-            var showErrorDialog by remember(isErrorDialogVisible.value) {
-                mutableStateOf(isErrorDialogVisible.value)
-            }
-            if (showErrorDialog) {
-                SomethingWentWrongDialog(
-                    dismiss = { showErrorDialog = false }
-                )
-            }
+            ErrorMessage(homeState) { viewModel.refresh() }
+            ListSort(homeState) { viewModel.setSort(it) }
+            ErrorDialog(homeState)
         }
         // See comment above about the new pull to refresh from Google
 //        PullRefreshIndicator(
@@ -118,6 +90,54 @@ fun HomeMain(
 //            state,
 //            Modifier.align(Alignment.TopCenter)
 //        )
+    }
+}
+
+@Composable
+private fun ErrorDialog(homeState: HomeState) {
+    val isErrorDialogVisible = remember {
+        derivedStateOf { homeState.loading?.isError == true && homeState.dataPaging.itemCount > 0 }
+    }
+    var showErrorDialog by remember(isErrorDialogVisible.value) {
+        mutableStateOf(isErrorDialogVisible.value)
+    }
+    if (showErrorDialog) {
+        SomethingWentWrongDialog(
+            dismiss = { showErrorDialog = false }
+        )
+    }
+}
+
+@Composable
+private fun ListSort(
+    homeState: HomeState,
+    onSort: (Sort) -> Unit
+) {
+    val isSortVisible = remember {
+        derivedStateOf {
+            homeState.dataPaging.itemCount > 0
+        }
+    }
+    FadeAnimatedVisibility(visible = isSortVisible.value) {
+        SortButton(
+            sort = homeState.sort,
+            onSort = onSort
+        )
+    }
+}
+
+@Composable
+private fun ErrorMessage(
+    homeState: HomeState,
+    onRetry: () -> Unit
+) {
+    val isErrorVisible = remember {
+        derivedStateOf {
+            homeState.loading?.isError == true && homeState.dataPaging.itemCount == 0
+        }
+    }
+    FadeAnimatedVisibility(visible = isErrorVisible.value) {
+        ErrorIndicator(onRetry = onRetry)
     }
 }
 

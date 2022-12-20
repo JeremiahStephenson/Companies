@@ -1,6 +1,8 @@
 package com.jerry.companies
 
 import androidx.compose.animation.*
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -16,7 +18,6 @@ import com.jerry.companies.ui.common.unboundClickable
 import com.ramcosta.composedestinations.DestinationsNavHost
 import com.ramcosta.composedestinations.animations.defaults.RootNavGraphDefaultAnimations
 import com.ramcosta.composedestinations.animations.rememberAnimatedNavHostEngine
-import androidx.compose.animation.core.Animatable
 
 @OptIn(
     ExperimentalMaterialNavigationApi::class,
@@ -30,7 +31,10 @@ fun MainContent(
         TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
     val engine = rememberAnimatedNavHostEngine(
-        //rootDefaultAnimations = RootNavGraphDefaultAnimations.ACCOMPANIST_FADING
+        rootDefaultAnimations = RootNavGraphDefaultAnimations(
+            enterTransition = { fadeIn(animationSpec = tween(300)) },
+            exitTransition = { fadeOut(animationSpec = tween(300)) }
+        )
     )
     val navController = engine.rememberNavController()
 

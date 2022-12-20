@@ -7,7 +7,7 @@ import java.util.*
 const val LOCAL_DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss"
 const val READABLE_DATE_PATTERN = "MM/yy"
 
-val READABLE_DATE_PATTERN_PARSER = DateTimeFormatter.ofPattern(
+val READABLE_DATE_PATTERN_PARSER: DateTimeFormatter = DateTimeFormatter.ofPattern(
     READABLE_DATE_PATTERN,
     Locale.US
 ).withZone(ZoneOffset.UTC)

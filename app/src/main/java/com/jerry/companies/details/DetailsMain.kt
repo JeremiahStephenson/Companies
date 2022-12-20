@@ -37,15 +37,16 @@ import org.koin.androidx.compose.koinViewModel
 @Destination
 @Composable
 fun DetailsMain(
+    // This needs to be here for the destinations code generation
+    // but we don't need to do anything with it since the viewmodel is
+    // already aware of it
     companyId: Long,
     viewModel: DetailsViewModel = koinViewModel()
 ) {
     val detailsFlow = viewModel.companyFlow.collectAsStateWithLifecycle(null)
-
     LocalAppBarTitle.current(detailsFlow.value?.company?.name.orEmpty())
 
     val scrollState = rememberScrollState()
-
     Column(
         modifier = Modifier
             .fillMaxSize()

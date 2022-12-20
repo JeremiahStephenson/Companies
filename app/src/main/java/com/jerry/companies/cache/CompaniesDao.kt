@@ -1,12 +1,7 @@
 package com.jerry.companies.cache
 
 import androidx.paging.PagingSource
-import androidx.room.Dao
-import androidx.room.Delete
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
-import androidx.room.Query
-import androidx.room.Transaction
+import androidx.room.*
 import com.jerry.companies.cache.data.Company
 import com.jerry.companies.cache.data.CompanyAndRevenue
 import com.jerry.companies.cache.data.Revenue
@@ -25,10 +20,10 @@ interface CompaniesDao {
     suspend fun insertAllRevenue(revenueList: List<Revenue>)
 
     @Query("SELECT * FROM companies ORDER BY companies.name")
-    fun getCompaniesWithRevenueByName(): PagingSource<Int, Company>
+    fun getCompaniesByName(): PagingSource<Int, Company>
 
     @Query("SELECT * FROM companies ORDER BY companies.id")
-    fun getCompaniesWithRevenueById(): PagingSource<Int, Company>
+    fun getCompaniesById(): PagingSource<Int, Company>
 
     @Transaction
     @Query("SELECT * FROM companies WHERE id = :id")

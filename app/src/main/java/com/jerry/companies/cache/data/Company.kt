@@ -22,7 +22,7 @@ data class Company(
         const val TABLE_NAME = "companies"
     }
 
-    val fullAddress get() = "${address}, ${city}, ${country}"
+    private val fullAddress get() = "$address, $city, $country"
 
     val mapIntent get() = Intent(
         Intent.ACTION_VIEW,
