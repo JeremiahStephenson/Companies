@@ -4,41 +4,37 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.cachedIn
 import com.jerry.companies.repositories.CompanyRepository
-import com.jerry.companies.service.DataResource
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.transformLatest
+import com.jerry.companies.repositories.Filter
+import kotlinx.coroutines.flow.*
 
 class HomeViewModel(
     private val companyRepository: CompanyRepository
 ) : ViewModel() {
 
-    val companiesFlow = companyRepository
-        .companiesFlow
-        .cachedIn(viewModelScope)
+    private val filterFlow = MutableStateFlow(Filter.ID)
 
-    private val _flow = MutableStateFlow<Unit?>(null)
-    val flow = _flow.transformLatest {
-        if (it == null) {
-            emit(DataResource.done(null))
-            return@transformLatest
-        }
-        emit(DataResource.loading())
-        try {
-            companyRepository.loadCompanies()
-            emit(DataResource.done(Unit))
-        } catch (t : Throwable) {
-            emit(DataResource.error(t))
-        }
+    val localCompaniesFlow = filterFlow.flatMapLatest {
+        companyRepository.getLocalCompaniesFlow(it)
+            .cachedIn(viewModelScope)
+    }
+
+    private val _uiFlow = MutableStateFlow<Unit?>(Unit)
+    val uiFlow = _uiFlow.filterNotNull().flatMapLatest {
+        companyRepository.remoteCompaniesFlow
+    }
+    .onEach {
+        _uiFlow.value = null
     }.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000L),
-        DataResource.idle()
+        null
     )
 
+    fun setFilter(filter: Filter) {
+        filterFlow.value = filter
+    }
+
     fun refresh() {
-        _flow.value = null
-        _flow.value = Unit
+        _uiFlow.value = Unit
     }
 }
