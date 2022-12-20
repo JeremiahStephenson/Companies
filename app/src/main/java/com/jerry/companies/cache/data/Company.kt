@@ -1,7 +1,10 @@
 package com.jerry.companies.cache.data
 
+import android.content.Intent
+import android.net.Uri
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import java.net.URLEncoder
 import java.time.Instant
 
 @Entity(
@@ -18,4 +21,13 @@ data class Company(
     companion object {
         const val TABLE_NAME = "companies"
     }
+
+    val fullAddress get() = "${address}, ${city}, ${country}"
+
+    val mapIntent get() = Intent(
+        Intent.ACTION_VIEW,
+        Uri.parse("https://www.google.com/maps/search/?api=1&query=${
+            URLEncoder.encode(fullAddress, Charsets.UTF_8.name())
+        }")
+    )
 }

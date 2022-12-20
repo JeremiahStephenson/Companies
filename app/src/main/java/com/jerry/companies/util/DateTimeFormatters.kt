@@ -5,10 +5,10 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 
 const val LOCAL_DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss"
-const val READABLE_DATE_TIME_PATTERN = "MMMM dd HH:mm a"
+const val READABLE_DATE_PATTERN = "MM/yy"
 
-val READBLE_DATE_TIME_PATTERN_PARSER = DateTimeFormatter.ofPattern(
-    READABLE_DATE_TIME_PATTERN,
+val READABLE_DATE_PATTERN_PARSER = DateTimeFormatter.ofPattern(
+    READABLE_DATE_PATTERN,
     Locale.US
 ).withZone(ZoneOffset.UTC)
 

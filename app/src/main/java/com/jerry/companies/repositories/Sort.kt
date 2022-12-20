@@ -1,5 +1,5 @@
 package com.jerry.companies.repositories
 
-enum class Filter {
+enum class Sort {
     ID, NAME
 }

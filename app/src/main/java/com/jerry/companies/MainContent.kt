@@ -16,6 +16,7 @@ import com.jerry.companies.ui.common.unboundClickable
 import com.ramcosta.composedestinations.DestinationsNavHost
 import com.ramcosta.composedestinations.animations.defaults.RootNavGraphDefaultAnimations
 import com.ramcosta.composedestinations.animations.rememberAnimatedNavHostEngine
+import androidx.compose.animation.core.Animatable
 
 @OptIn(
     ExperimentalMaterialNavigationApi::class,
@@ -29,9 +30,17 @@ fun MainContent(
         TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
     val engine = rememberAnimatedNavHostEngine(
-        rootDefaultAnimations = RootNavGraphDefaultAnimations.ACCOMPANIST_FADING
+        //rootDefaultAnimations = RootNavGraphDefaultAnimations.ACCOMPANIST_FADING
     )
     val navController = engine.rememberNavController()
+
+    val showToolbarAnimator = remember { Animatable(0F) }
+    LaunchedEffect(navController.appCurrentDestinationAsState().value) {
+        showToolbarAnimator.snapTo(scrollBehavior.state.heightOffset)
+        showToolbarAnimator.animateTo(0F) {
+            scrollBehavior.state.heightOffset = this.value
+        }
+    }
 
     var title by remember { mutableStateOf<String?>(null) }
     CompositionLocalProvider(

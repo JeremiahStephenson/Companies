@@ -4,37 +4,38 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.cachedIn
 import com.jerry.companies.repositories.CompanyRepository
-import com.jerry.companies.repositories.Filter
+import com.jerry.companies.repositories.Sort
 import kotlinx.coroutines.flow.*
 
 class HomeViewModel(
     private val companyRepository: CompanyRepository
 ) : ViewModel() {
 
-    private val filterFlow = MutableStateFlow(Filter.ID)
+    private val _sortFlow = MutableStateFlow(Sort.ID)
+    val sortFlow = _sortFlow.asStateFlow()
 
-    val localCompaniesFlow = filterFlow.flatMapLatest {
+    val localCompaniesFlow = sortFlow.flatMapLatest {
         companyRepository.getLocalCompaniesFlow(it)
             .cachedIn(viewModelScope)
     }
 
-    private val _uiFlow = MutableStateFlow<Unit?>(Unit)
-    val uiFlow = _uiFlow.filterNotNull().flatMapLatest {
+    private val _loadingFlow = MutableStateFlow<Unit?>(Unit)
+    val loadingFlow = _loadingFlow.filterNotNull().flatMapLatest {
         companyRepository.remoteCompaniesFlow
     }
     .onEach {
-        _uiFlow.value = null
+        _loadingFlow.value = null
     }.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000L),
         null
     )
 
-    fun setFilter(filter: Filter) {
-        filterFlow.value = filter
+    fun setFilter(sort: Sort) {
+        _sortFlow.value = sort
     }
 
     fun refresh() {
-        _uiFlow.value = Unit
+        _loadingFlow.value = Unit
     }
 }

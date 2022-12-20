@@ -10,6 +10,7 @@ import androidx.room.Transaction
 import com.jerry.companies.cache.data.Company
 import com.jerry.companies.cache.data.CompanyAndRevenue
 import com.jerry.companies.cache.data.Revenue
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface CompaniesDao {
@@ -23,11 +24,13 @@ interface CompaniesDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAllRevenue(revenueList: List<Revenue>)
 
-    @Transaction
     @Query("SELECT * FROM companies ORDER BY companies.name")
-    fun getCompaniesWithRevenueByName(): PagingSource<Int, CompanyAndRevenue>
+    fun getCompaniesWithRevenueByName(): PagingSource<Int, Company>
+
+    @Query("SELECT * FROM companies ORDER BY companies.id")
+    fun getCompaniesWithRevenueById(): PagingSource<Int, Company>
 
     @Transaction
-    @Query("SELECT * FROM companies ORDER BY companies.id")
-    fun getCompaniesWithRevenueById(): PagingSource<Int, CompanyAndRevenue>
+    @Query("SELECT * FROM companies WHERE id = :id")
+    fun getCompanyFlowById(id: Long): Flow<CompanyAndRevenue>
 }
