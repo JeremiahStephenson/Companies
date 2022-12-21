@@ -28,4 +28,13 @@ interface CompaniesDao {
     @Transaction
     @Query("SELECT * FROM companies WHERE id = :id")
     fun getCompanyFlowById(id: Long): Flow<CompanyAndRevenue>
+
+    @Query("SELECT * FROM companies WHERE id = :id")
+    fun findCompanyById(id: Long): List<Company>
+
+    @Query("SELECT * FROM revenue WHERE companyId = :id")
+    fun findAllRevenue(id: Long): List<Revenue>
+
+    @Query("DELETE FROM companies WHERE id = :id")
+    fun deleteCompanyById(id: Long)
 }

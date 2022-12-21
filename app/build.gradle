@@ -62,6 +62,8 @@ android {
     packagingOptions {
         resources {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
+            excludes += 'META-INF/LICENSE.md'
+            excludes += 'META-INF/LICENSE-notice.md'
         }
     }
     applicationVariants.all { variant ->
@@ -127,6 +129,7 @@ dependencies {
     androidTestImplementation "androidx.test.ext:junit:$junitExt"
     androidTestImplementation "androidx.test.espresso:espresso-core:$espresso"
     androidTestImplementation "androidx.compose.ui:ui-test-junit4:$compose"
+    androidTestImplementation "app.cash.turbine:turbine:$turbine"
 
     debugImplementation "androidx.compose.ui:ui-tooling:$compose"
     debugImplementation "androidx.compose.ui:ui-test-manifest:$compose"
