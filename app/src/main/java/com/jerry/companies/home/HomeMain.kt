@@ -10,6 +10,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,7 +26,6 @@ import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.jerry.companies.R
 import com.jerry.companies.destinations.DetailsMainDestination
 import com.jerry.companies.repositories.Sort
-import com.jerry.companies.service.DataResource
 import com.jerry.companies.ui.common.ErrorIndicator
 import com.jerry.companies.ui.common.FadeAnimatedVisibility
 import com.jerry.companies.ui.common.LocalAppBarTitle
@@ -46,6 +46,16 @@ fun HomeMain(
 
     val homeState = getHomeState(viewModel)
     val isLoading by remember { derivedStateOf { homeState.loading?.isLoading == true } }
+
+    var isInErrorState by rememberSaveable { mutableStateOf(false) }
+    DisposableEffect(Unit) {
+        if (isInErrorState) {
+            viewModel.refresh()
+        }
+        onDispose {
+            isInErrorState = homeState.loading?.isError == true
+        }
+    }
 
     // This is deprecated but the supported version from Google has some bugs
     // The indicator gets stuck sometimes until you scroll the list
@@ -133,7 +143,9 @@ private fun ErrorMessage(
 ) {
     val isErrorVisible = remember {
         derivedStateOf {
-            homeState.loading?.isError == true && homeState.dataPaging.itemCount == 0
+            homeState.loading != null &&
+                    homeState.loading?.isError == true &&
+                    homeState.dataPaging.itemCount == 0
         }
     }
     FadeAnimatedVisibility(visible = isErrorVisible.value) {
@@ -214,7 +226,7 @@ private fun CompanyItem(
 @Composable
 private fun getHomeState(viewModel: HomeViewModel): HomeState {
     val dataState = viewModel.localCompaniesFlow.collectAsLazyPagingItems()
-    val uiState = viewModel.loadingFlow.collectAsStateWithLifecycle(DataResource.idle())
+    val uiState = viewModel.loadingFlow.collectAsStateWithLifecycle(null)
     val sort = viewModel.sortFlow.collectAsStateWithLifecycle()
     return HomeState(dataState, uiState, sort)
 }
