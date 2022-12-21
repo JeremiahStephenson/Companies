@@ -12,6 +12,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jerry.companies.R
@@ -19,6 +22,7 @@ import com.jerry.companies.cache.data.Company
 import com.jerry.companies.cache.data.Revenue
 import com.jerry.companies.extensions.prettyCount
 import com.jerry.companies.ui.common.LocalAppBarTitle
+import com.jerry.companies.ui.common.theme.CompaniesTheme
 import com.jerry.companies.ui.common.unboundClickable
 import com.jerry.companies.util.READABLE_DATE_PATTERN_PARSER
 import com.patrykandpatryk.vico.compose.axis.horizontal.bottomAxis
@@ -32,6 +36,7 @@ import com.patrykandpatryk.vico.core.entry.ChartEntryModelProducer
 import com.patrykandpatryk.vico.core.entry.FloatEntry
 import com.ramcosta.composedestinations.annotation.Destination
 import org.koin.androidx.compose.koinViewModel
+import java.time.Instant
 
 
 @Destination
@@ -46,13 +51,7 @@ fun DetailsMain(
     val detailsFlow = viewModel.companyFlow.collectAsStateWithLifecycle(null)
     LocalAppBarTitle.current(detailsFlow.value?.company?.name.orEmpty())
 
-    val scrollState = rememberScrollState()
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(scrollState)
-            .padding(16.dp)
-    ) {
+    ContentContainer {
         detailsFlow.value?.let { companyAndRevenue ->
             CompanyAddress(companyAndRevenue.company)
             CompanyRevenue(companyAndRevenue.revenue)
@@ -61,8 +60,23 @@ fun DetailsMain(
 }
 
 @Composable
+private fun ContentContainer(
+    content: @Composable ColumnScope.() -> Unit
+) {
+    val scrollState = rememberScrollState()
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(scrollState)
+            .padding(16.dp),
+        content = content
+    )
+}
+
+@Composable
 private fun CompanyAddress(company: Company) {
     Text(
+        modifier = Modifier.semantics { heading() },
         style = MaterialTheme.typography.titleLarge,
         text = stringResource(R.string.address)
     )
@@ -70,7 +84,11 @@ private fun CompanyAddress(company: Company) {
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(modifier = Modifier.weight(1F)) {
+        Column(
+            modifier = Modifier
+                .weight(1F)
+                .semantics(mergeDescendants = true) {}
+        ) {
             Text(
                 modifier = Modifier.padding(top = 8.dp),
                 style = MaterialTheme.typography.bodyLarge,
@@ -101,7 +119,9 @@ private fun CompanyAddress(company: Company) {
 @Composable
 private fun CompanyRevenue(revenue: List<Revenue>) {
     Text(
-        modifier = Modifier.padding(top = 16.dp),
+        modifier = Modifier
+            .padding(top = 16.dp)
+            .semantics { heading() },
         style = MaterialTheme.typography.titleLarge,
         text = stringResource(R.string.revenue)
     )
@@ -141,3 +161,22 @@ private fun rememberColumnChartYAxisValueFormatter()
     AxisValueFormatter { x, _ ->
         x.prettyCount.orEmpty()
     }
+
+@Preview(widthDp = 400, heightDp = 200)
+@Composable
+private fun CompanyAddressPreview() {
+    CompaniesTheme {
+        ContentContainer {
+            CompanyAddress(
+                company = Company(
+                    0,
+                    "Initech",
+                    "4120 Freidrich Ln",
+                    "Austin",
+                    "78744",
+                    Instant.now()
+                )
+            )
+        }
+    }
+}

@@ -18,7 +18,7 @@ import com.jerry.companies.ui.common.theme.CompaniesTheme
 import com.jerry.companies.ui.common.theme.ThemePreviews
 
 @Composable
-fun ErrorIndicator(onRetry: () -> Unit) {
+fun EmbeddedErrorMessage(onRetry: () -> Unit) {
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -43,6 +43,6 @@ fun ErrorIndicator(onRetry: () -> Unit) {
 @Composable
 private fun ErrorPreview() {
     CompaniesTheme {
-        ErrorIndicator {}
+        EmbeddedErrorMessage {}
     }
 }

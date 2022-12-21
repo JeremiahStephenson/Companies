@@ -7,21 +7,19 @@ import androidx.room.withTransaction
 import com.jerry.companies.cache.CompaniesDao
 import com.jerry.companies.cache.CompaniesDatabase
 import com.jerry.companies.cache.data.Company
-import com.jerry.companies.cache.data.CompanyAndRevenue
 import com.jerry.companies.cache.data.Revenue
 import com.jerry.companies.service.CompaniesAPI
 import com.jerry.companies.service.DataResource
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.onStart
+import com.jerry.companies.util.CoroutineContextProvider
+import kotlinx.coroutines.flow.*
 import java.time.Instant
 import java.time.ZoneOffset
 
 class CompanyRepositoryImpl(
     private val companiesAPI: CompaniesAPI,
     private val companiesDao: CompaniesDao,
-    private val companiesDatabase: CompaniesDatabase
+    private val companiesDatabase: CompaniesDatabase,
+    cc: CoroutineContextProvider
 ) : CompanyRepository {
 
     override val remoteCompaniesFlow = flow {
@@ -31,7 +29,7 @@ class CompanyRepositoryImpl(
         emit(DataResource.loading())
     }.catch {
         emit(DataResource.error(it))
-    }
+    }.flowOn(cc.io)
 
     override suspend fun loadCompanies() {
         val list = companiesAPI.getCompanyList()
@@ -69,16 +67,13 @@ class CompanyRepositoryImpl(
         }
     }
 
-    override fun getLocalCompaniesFlow(sort: Sort): Flow<PagingData<Company>> {
-        return Pager(PagingConfig(40)) {
+    override fun getLocalCompaniesFlow(sort: Sort): Flow<PagingData<Company>>  =
+        Pager(PagingConfig(40)) {
             when (sort) {
                 Sort.NAME -> companiesDao.getCompaniesByName()
                 Sort.ID -> companiesDao.getCompaniesById()
             }
         }.flow
-    }
 
-    override fun getCompanyFlow(id: Long): Flow<CompanyAndRevenue> {
-        return companiesDao.getCompanyFlowById(id)
-    }
+    override fun getCompanyFlow(id: Long) = companiesDao.getCompanyFlowById(id)
 }

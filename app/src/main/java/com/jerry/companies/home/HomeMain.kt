@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -26,14 +27,18 @@ import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.jerry.companies.R
 import com.jerry.companies.destinations.DetailsMainDestination
 import com.jerry.companies.repositories.Sort
-import com.jerry.companies.ui.common.ErrorIndicator
+import com.jerry.companies.ui.common.EmbeddedErrorMessage
 import com.jerry.companies.ui.common.FadeAnimatedVisibility
 import com.jerry.companies.ui.common.LocalAppBarTitle
+import com.jerry.companies.ui.common.theme.CompaniesTheme
+import com.jerry.companies.ui.common.theme.ThemePreviews
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootNavGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import org.koin.androidx.compose.koinViewModel
 
+// We're just suppressing the deprecation warnings to the SwipeRefresh composable
+// See comments below for more details
 @Suppress("Deprecation")
 @RootNavGraph(start = true)
 @Destination
@@ -91,7 +96,7 @@ fun HomeMain(
             }
 
             ErrorMessage(homeState) { viewModel.refresh() }
-            ListSort(homeState) { viewModel.setSort(it) }
+            ListSorter(homeState) { viewModel.setSort(it) }
             ErrorDialog(homeState)
         }
         // See comment above about the new pull to refresh from Google
@@ -104,22 +109,7 @@ fun HomeMain(
 }
 
 @Composable
-private fun ErrorDialog(homeState: HomeState) {
-    val isErrorDialogVisible = remember {
-        derivedStateOf { homeState.loading?.isError == true && homeState.dataPaging.itemCount > 0 }
-    }
-    var showErrorDialog by remember(isErrorDialogVisible.value) {
-        mutableStateOf(isErrorDialogVisible.value)
-    }
-    if (showErrorDialog) {
-        SomethingWentWrongDialog(
-            dismiss = { showErrorDialog = false }
-        )
-    }
-}
-
-@Composable
-private fun ListSort(
+private fun ListSorter(
     homeState: HomeState,
     onSort: (Sort) -> Unit
 ) {
@@ -137,6 +127,29 @@ private fun ListSort(
 }
 
 @Composable
+private fun SortButton(
+    sort: Sort,
+    onSort: (Sort) -> Unit
+) {
+    val oppositeSort = when (sort) {
+        Sort.ID -> Sort.NAME
+        Sort.NAME -> Sort.ID
+    }
+    OutlinedButton(
+        modifier = Modifier
+            .padding(top = 20.dp)
+            .background(MaterialTheme.colorScheme.background),
+        contentPadding = PaddingValues(16.dp),
+        onClick = { onSort(oppositeSort) }) {
+        Text(
+            style = MaterialTheme.typography.titleMedium,
+            textAlign = TextAlign.Center,
+            text = stringResource(R.string.sort_by, oppositeSort.name.lowercase())
+        )
+    }
+}
+
+@Composable
 private fun ErrorMessage(
     homeState: HomeState,
     onRetry: () -> Unit
@@ -149,7 +162,22 @@ private fun ErrorMessage(
         }
     }
     FadeAnimatedVisibility(visible = isErrorVisible.value) {
-        ErrorIndicator(onRetry = onRetry)
+        EmbeddedErrorMessage(onRetry = onRetry)
+    }
+}
+
+@Composable
+private fun ErrorDialog(homeState: HomeState) {
+    val isErrorDialogVisible = remember {
+        derivedStateOf { homeState.loading?.isError == true && homeState.dataPaging.itemCount > 0 }
+    }
+    var showErrorDialog by remember(isErrorDialogVisible.value) {
+        mutableStateOf(isErrorDialogVisible.value)
+    }
+    if (showErrorDialog) {
+        SomethingWentWrongDialog(
+            dismiss = { showErrorDialog = false }
+        )
     }
 }
 
@@ -183,29 +211,6 @@ private fun SomethingWentWrongDialog(
 }
 
 @Composable
-private fun SortButton(
-    sort: Sort,
-    onSort: (Sort) -> Unit
-) {
-    val oppositeSort = when (sort) {
-        Sort.ID -> Sort.NAME
-        Sort.NAME -> Sort.ID
-    }
-    OutlinedButton(
-        modifier = Modifier
-            .padding(top = 20.dp)
-            .background(MaterialTheme.colorScheme.background),
-        contentPadding = PaddingValues(16.dp),
-        onClick = { onSort(oppositeSort) }) {
-        Text(
-            style = MaterialTheme.typography.titleMedium,
-            textAlign = TextAlign.Center,
-            text = stringResource(R.string.sort_by, oppositeSort.name.lowercase())
-        )
-    }
-}
-
-@Composable
 private fun CompanyItem(
     companyName: String,
     onViewDetails: () -> Unit
@@ -229,4 +234,28 @@ private fun getHomeState(viewModel: HomeViewModel): HomeState {
     val uiState = viewModel.loadingFlow.collectAsStateWithLifecycle(null)
     val sort = viewModel.sortFlow.collectAsStateWithLifecycle()
     return HomeState(dataState, uiState, sort)
+}
+
+@Preview
+@Composable
+private fun CompanyItemPreview() {
+    CompaniesTheme {
+        CompanyItem(companyName = "Company Name") {}
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun ErrorDialogPreview() {
+    CompaniesTheme {
+        SomethingWentWrongDialog {}
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun SortButtonPreview() {
+    CompaniesTheme {
+        SortButton(Sort.NAME) {}
+    }
 }

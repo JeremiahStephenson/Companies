@@ -16,8 +16,7 @@ class HomeViewModel(
 
     val localCompaniesFlow = sortFlow.flatMapLatest {
         companyRepository.getLocalCompaniesFlow(it)
-            .cachedIn(viewModelScope)
-    }
+    }.cachedIn(viewModelScope)
 
     private val _loadingFlow = MutableStateFlow<Unit?>(Unit)
     val loadingFlow = _loadingFlow.filterNotNull().flatMapLatest {

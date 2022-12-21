@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
 import com.jerry.companies.ui.common.LocalAppBarTitle
@@ -32,8 +33,8 @@ fun MainContent(
 
     val engine = rememberAnimatedNavHostEngine(
         rootDefaultAnimations = RootNavGraphDefaultAnimations(
-            enterTransition = { fadeIn(animationSpec = tween(300)) },
-            exitTransition = { fadeOut(animationSpec = tween(300)) }
+            enterTransition = { fadeIn(animationSpec = tween(ANIM_DURATION)) },
+            exitTransition = { fadeOut(animationSpec = tween(ANIM_DURATION)) }
         )
     )
     val navController = engine.rememberNavController()
@@ -124,3 +125,18 @@ fun Toolbar(
         scrollBehavior = scrollBehavior
     )
 }
+
+@Preview
+@Composable
+private fun ToolbarPreview() {
+    Toolbar(
+        scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(
+            rememberTopAppBarState()
+        ),
+        showBackArrow = { true },
+        onBack = {}) {
+        "Title"
+    }
+}
+
+private const val ANIM_DURATION = 300
