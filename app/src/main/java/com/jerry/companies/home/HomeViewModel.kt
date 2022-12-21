@@ -18,6 +18,9 @@ class HomeViewModel(
         companyRepository.getLocalCompaniesFlow(it)
     }.cachedIn(viewModelScope)
 
+    // We can use this flow to trigger a refresh
+    // It might be better to use enums for this but this works fine
+    // for this demo
     private val _loadingFlow = MutableStateFlow<Unit?>(Unit)
     val loadingFlow = _loadingFlow.filterNotNull().flatMapLatest {
         companyRepository.remoteCompaniesFlow

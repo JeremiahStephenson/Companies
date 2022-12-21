@@ -14,6 +14,8 @@ class DetailsViewModel(
     companyRepository: CompanyRepository
 ) : ViewModel() {
 
+    // Use the company id that came from the navigation
+    // arguments to load a flow from the local cache
     val companyFlow =
         companyRepository.getCompanyFlow(DetailsMainDestination.argsFrom(handle).companyId)
             .filterNotNull()

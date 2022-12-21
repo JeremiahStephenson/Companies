@@ -24,6 +24,8 @@ class CompanyRepositoryImpl(
 
     override val remoteCompaniesFlow = flow {
         loadCompanies()
+        // If we weren't caching the results then they could be returned here in `done`
+        // Since we are caching then we can just return Unit
         emit(DataResource.done(Unit))
     }.onStart {
         emit(DataResource.loading())
@@ -32,8 +34,11 @@ class CompanyRepositoryImpl(
     }.flowOn(cc.io)
 
     override suspend fun loadCompanies() {
+
+        // Load the list from the remote source
         val list = companiesAPI.getCompanyList()
 
+        // Save it all to the local database
         companiesDatabase.withTransaction {
             // keep track of when we loaded these so
             // we can delete old ones that don't returned in the future
@@ -67,6 +72,7 @@ class CompanyRepositoryImpl(
         }
     }
 
+    // Returns a paging flow of the companies
     override fun getLocalCompaniesFlow(sort: Sort): Flow<PagingData<Company>>  =
         Pager(PagingConfig(40)) {
             when (sort) {
@@ -75,5 +81,6 @@ class CompanyRepositoryImpl(
             }
         }.flow
 
+    // Returns a flow for a company with its revenue
     override fun getCompanyFlow(id: Long) = companiesDao.getCompanyFlowById(id)
 }
