@@ -4,9 +4,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
+import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.jerry.companies.cache.CompaniesDataSourceFactory
+import com.jerry.companies.cache.data.Company
 import com.jerry.companies.repositories.Sort
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
@@ -21,12 +24,15 @@ class HomeViewModel(
     private val _errorFlow = MutableStateFlow(false)
     val errorFlow = _errorFlow.asStateFlow()
 
+    private val cacheMap = mutableMapOf<Sort, Flow<PagingData<Company>>>()
     val companiesPager = _currentSortFlow.flatMapLatest {
-        Pager(PagingConfig(pageSize = 40)) {
-            companyDataSource.generateDataSource(it) {
-                _errorFlow.value = true
-            }
-        }.flow
+        cacheMap.getOrPut(it) {
+            Pager(PagingConfig(pageSize = 40)) {
+                companyDataSource.generateDataSource(it) {
+                    _errorFlow.value = true
+                }
+            }.flow
+        }
     }.cachedIn(viewModelScope)
 
     fun dismissErrorDialog() {
