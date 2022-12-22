@@ -26,7 +26,6 @@ import androidx.paging.compose.itemsIndexed
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.jerry.companies.R
-import com.jerry.companies.cache.data.Company
 import com.jerry.companies.destinations.DetailsMainDestination
 import com.jerry.companies.repositories.Sort
 import com.jerry.companies.ui.common.EmbeddedErrorMessage
@@ -51,22 +50,7 @@ fun HomeMain(
 ) {
     LocalAppBarTitle.current(stringResource(R.string.app_name))
 
-    val pagerState = viewModel.companiesPager.collectAsLazyPagingItems()
-
-    val errorDialog by viewModel.errorFlow.collectAsStateWithLifecycle()
-
-//    val homeState = getHomeState(viewModel)
-//    val isLoading by remember { derivedStateOf { homeState.loading?.isLoading == true } }
-//
-//    var isInErrorState by rememberSaveable { mutableStateOf(false) }
-//    DisposableEffect(Unit) {
-//        if (isInErrorState) {
-//            viewModel.refresh()
-//        }
-//        onDispose {
-//            isInErrorState = homeState.loading?.isError == true
-//        }
-//    }
+    val state = getHomeState(viewModel)
 
     // This is deprecated but the supported version from Google has some bugs
     // The indicator gets stuck sometimes until you scroll the list
@@ -76,8 +60,8 @@ fun HomeMain(
     //        onRefresh = { viewModel.refresh() }
     //    )
     SwipeRefresh(
-        state = rememberSwipeRefreshState(pagerState.loadState.refresh is LoadState.Loading),
-        onRefresh = { pagerState.refresh() },
+        state = rememberSwipeRefreshState(state.dataPaging.loadState.refresh is LoadState.Loading),
+        onRefresh = { state.dataPaging.refresh() },
     ) {
     //Box(Modifier.pullRefresh(state)) {
         Box(
@@ -89,7 +73,7 @@ fun HomeMain(
                     .fillMaxSize(),
                 contentPadding = PaddingValues(top = 84.dp)
             ) {
-                itemsIndexed(pagerState) { index, item ->
+                itemsIndexed(state.dataPaging) { index, item ->
                     if (index > 0) {
                         Divider()
                     }
@@ -101,9 +85,9 @@ fun HomeMain(
                 }
             }
 
-            ErrorMessage(pagerState) { pagerState.refresh() }
-//            ListSorter(homeState) { viewModel.setSort(it) }
-            if (errorDialog) {
+            ErrorMessage(state.dataPaging) { state.dataPaging.refresh() }
+            ListSorter(state) { viewModel.setSort(it) }
+            if (state.errorDialog) {
                 SomethingWentWrongDialog(
                     dismiss = { viewModel.dismissErrorDialog() }
                 )
@@ -120,17 +104,17 @@ fun HomeMain(
 
 @Composable
 private fun ListSorter(
-    homeState: HomeState,
+    state: HomeState,
     onSort: (Sort) -> Unit
 ) {
     val isSortVisible = remember {
         derivedStateOf {
-            homeState.dataPaging.itemCount > 0
+            state.dataPaging.itemCount > 0
         }
     }
     FadeAnimatedVisibility(visible = isSortVisible.value) {
         SortButton(
-            sort = homeState.sort,
+            sort = state.sort,
             onSort = onSort
         )
     }
@@ -223,10 +207,10 @@ private fun CompanyItem(
 
 @Composable
 private fun getHomeState(viewModel: HomeViewModel): HomeState {
-    val dataState = viewModel.localCompaniesFlow.collectAsLazyPagingItems()
-    val uiState = viewModel.loadingFlow.collectAsStateWithLifecycle(null)
-    val sort = viewModel.sortFlow.collectAsStateWithLifecycle()
-    return HomeState(dataState, uiState, sort)
+    val pagerState = viewModel.companiesPager.collectAsLazyPagingItems()
+    val errorDialog = viewModel.errorFlow.collectAsStateWithLifecycle()
+    val currentSort = viewModel.currentSortFlow.collectAsStateWithLifecycle()
+    return HomeState(pagerState, errorDialog, currentSort)
 }
 
 @Preview

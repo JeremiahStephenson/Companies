@@ -3,7 +3,6 @@ package com.jerry.companies
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import app.cash.turbine.test
 import com.jerry.companies.cache.CompaniesDatabase
 import com.jerry.companies.cache.data.Company
 import com.jerry.companies.cache.data.Revenue
@@ -51,17 +50,6 @@ class CompanyRepositoryImplTest : KoinComponent {
     }
 
     @Test
-    fun testRemoteFlow() = runTest {
-        companyRepository.remoteCompaniesFlow.test {
-            val item = awaitItem()
-            assert(item.isLoading)
-            val finished = awaitItem()
-            assert(finished.isSuccessful)
-            cancelAndIgnoreRemainingEvents()
-        }
-    }
-
-    @Test
     fun testLocalCache() = runTest {
         val companyId = 0L
         companiesDao.insertAllCompanies(
@@ -95,8 +83,8 @@ class CompanyRepositoryImplTest : KoinComponent {
         )
 
         // Make sure things got saved
-        val companies = companiesDao.findCompanyById(companyId)
-        assert(companies.size == 1)
+        val company = companiesDao.findCompanyById(companyId)
+        assert(company != null)
 
         val revenue = companiesDao.findAllRevenue(companyId)
         assert(revenue.size == 2)
@@ -104,8 +92,8 @@ class CompanyRepositoryImplTest : KoinComponent {
         // Now delete and make sure the delete cascades down
         companiesDao.deleteCompanyById(companyId)
 
-        val emptyCompanies = companiesDao.findCompanyById(companyId)
-        assert(emptyCompanies.isEmpty())
+        val noCompany = companiesDao.findCompanyById(companyId)
+        assert(noCompany == null)
 
         val emptyRevenue = companiesDao.findAllRevenue(companyId)
         assert(emptyRevenue.isEmpty())

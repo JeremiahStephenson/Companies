@@ -1,17 +1,12 @@
 package com.jerry.companies.repositories
 
-import androidx.paging.Pager
-import androidx.paging.PagingConfig
-import androidx.paging.PagingData
 import androidx.room.withTransaction
 import com.jerry.companies.cache.CompaniesDao
 import com.jerry.companies.cache.CompaniesDatabase
 import com.jerry.companies.cache.data.Company
 import com.jerry.companies.cache.data.Revenue
 import com.jerry.companies.service.CompaniesAPI
-import com.jerry.companies.service.DataResource
 import com.jerry.companies.util.CoroutineContextProvider
-import kotlinx.coroutines.flow.*
 import java.time.Instant
 import java.time.ZoneOffset
 
@@ -22,18 +17,7 @@ class CompanyRepositoryImpl(
     cc: CoroutineContextProvider
 ) : CompanyRepository {
 
-    override val remoteCompaniesFlow = flow {
-        loadCompanies()
-        // If we weren't caching the results then they could be returned here in `done`
-        // Since we are caching then we can just return Unit
-        emit(DataResource.done(Unit))
-    }.onStart {
-        emit(DataResource.loading())
-    }.catch {
-        emit(DataResource.error(it))
-    }.flowOn(cc.io)
-
-    override suspend fun loadCompanies(): List<Long> {
+    override suspend fun loadCompanies() {
 
         // Load the list from the remote source
         val list = companiesAPI.getCompanyList()
@@ -70,18 +54,7 @@ class CompanyRepositoryImpl(
             // Now delete any old items that are not being returned any more
             companiesDao.deleteOldCompanies(now.toEpochMilli())
         }
-
-        return list.map { it.id }
     }
-
-    // Returns a paging flow of the companies
-    override fun getLocalCompaniesFlow(sort: Sort): Flow<PagingData<Company>>  =
-        Pager(PagingConfig(40)) {
-            when (sort) {
-                Sort.NAME -> companiesDao.getCompaniesByName()
-                Sort.ID -> companiesDao.getCompaniesById()
-            }
-        }.flow
 
     // Returns a flow for a company with its revenue
     override fun getCompanyFlow(id: Long) = companiesDao.getCompanyFlowById(id)
@@ -90,7 +63,10 @@ class CompanyRepositoryImpl(
         return companiesDao.findAllCompaniesIn(ids)
     }
 
-    override suspend fun getAllIds(): List<Long> {
-        return companiesDao.getAllIds()
+    override suspend fun getAllIds(sort: Sort): List<Long> {
+        return when (sort) {
+            Sort.NAME -> companiesDao.getAllIdsSortByName()
+            Sort.ID -> companiesDao.getAllIdsSortById()
+        }
     }
 }

@@ -1,16 +1,12 @@
 package com.jerry.companies.repositories
 
-import androidx.paging.PagingData
 import com.jerry.companies.cache.data.Company
 import com.jerry.companies.cache.data.CompanyAndRevenue
-import com.jerry.companies.service.DataResource
 import kotlinx.coroutines.flow.Flow
 
 interface CompanyRepository {
-    val remoteCompaniesFlow: Flow<DataResource<Unit>>
-    suspend fun loadCompanies(): List<Long>
-    fun getLocalCompaniesFlow(sort: Sort): Flow<PagingData<Company>>
+    suspend fun loadCompanies()
     fun getCompanyFlow(id: Long): Flow<CompanyAndRevenue>
     suspend fun findAllCompaniesIn(ids: List<Long>): List<Company>
-    suspend fun getAllIds(): List<Long>
+    suspend fun getAllIds(sort: Sort): List<Long>
 }

@@ -16,6 +16,6 @@ val appModule = module {
 
     factory { CompaniesDataSourceFactory(get(), get()) }
 
-    viewModel { HomeViewModel(get(), get()) }
+    viewModel { HomeViewModel(get()) }
     viewModel { DetailsViewModel(get(), get()) }
 }
