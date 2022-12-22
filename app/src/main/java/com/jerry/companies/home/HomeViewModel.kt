@@ -2,14 +2,31 @@ package com.jerry.companies.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
 import androidx.paging.cachedIn
+import com.jerry.companies.cache.CompaniesDataSourceFactory
 import com.jerry.companies.repositories.CompanyRepository
 import com.jerry.companies.repositories.Sort
 import kotlinx.coroutines.flow.*
 
 class HomeViewModel(
-    private val companyRepository: CompanyRepository
+    private val companyRepository: CompanyRepository,
+    private val companyDataSource: CompaniesDataSourceFactory
 ) : ViewModel() {
+
+    private val _errorFlow = MutableStateFlow(false)
+    val errorFlow = _errorFlow.asStateFlow()
+
+    val companiesPager = Pager(PagingConfig(pageSize = 40)) {
+        companyDataSource.generateDataSource {
+            _errorFlow.value = true
+        }
+    }.flow.cachedIn(viewModelScope)
+
+    fun dismissErrorDialog() {
+        _errorFlow.value = false
+    }
 
     private val _sortFlow = MutableStateFlow(Sort.ID)
     val sortFlow = _sortFlow.asStateFlow()
@@ -37,7 +54,8 @@ class HomeViewModel(
         _sortFlow.value = sort
     }
 
-    fun refresh() {
-        _loadingFlow.value = Unit
-    }
+//    fun refresh() {
+//        companyDataSource.invalidate()
+//        //_loadingFlow.value = Unit
+//    }
 }

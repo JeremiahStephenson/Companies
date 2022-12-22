@@ -1,5 +1,6 @@
 package com.jerry.companies.inject
 
+import com.jerry.companies.cache.CompaniesDataSourceFactory
 import com.jerry.companies.details.DetailsViewModel
 import com.jerry.companies.home.HomeViewModel
 import com.jerry.companies.repositories.CompanyRepository
@@ -13,6 +14,8 @@ val appModule = module {
 
     single<CoroutineContextProvider> { CoroutineContextProvider.MainCoroutineContext }
 
-    viewModel { HomeViewModel(get()) }
+    factory { CompaniesDataSourceFactory(get(), get()) }
+
+    viewModel { HomeViewModel(get(), get()) }
     viewModel { DetailsViewModel(get(), get()) }
 }

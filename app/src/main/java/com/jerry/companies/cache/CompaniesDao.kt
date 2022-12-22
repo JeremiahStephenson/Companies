@@ -35,6 +35,12 @@ interface CompaniesDao {
     @Query("SELECT * FROM revenue WHERE companyId = :id")
     fun findAllRevenue(id: Long): List<Revenue>
 
+    @Query("SELECT * FROM companies WHERE id IN (:ids)")
+    fun findAllCompaniesIn(ids: List<Long>): List<Company>
+
+    @Query("SELECT id FROM companies")
+    fun getAllIds(): List<Long>
+
     @Query("DELETE FROM companies WHERE id = :id")
     fun deleteCompanyById(id: Long)
 }

@@ -33,7 +33,7 @@ class CompanyRepositoryImpl(
         emit(DataResource.error(it))
     }.flowOn(cc.io)
 
-    override suspend fun loadCompanies() {
+    override suspend fun loadCompanies(): List<Long> {
 
         // Load the list from the remote source
         val list = companiesAPI.getCompanyList()
@@ -70,6 +70,8 @@ class CompanyRepositoryImpl(
             // Now delete any old items that are not being returned any more
             companiesDao.deleteOldCompanies(now.toEpochMilli())
         }
+
+        return list.map { it.id }
     }
 
     // Returns a paging flow of the companies
@@ -83,4 +85,12 @@ class CompanyRepositoryImpl(
 
     // Returns a flow for a company with its revenue
     override fun getCompanyFlow(id: Long) = companiesDao.getCompanyFlowById(id)
+
+    override suspend fun findAllCompaniesIn(ids: List<Long>): List<Company> {
+        return companiesDao.findAllCompaniesIn(ids)
+    }
+
+    override suspend fun getAllIds(): List<Long> {
+        return companiesDao.getAllIds()
+    }
 }

@@ -8,7 +8,9 @@ import kotlinx.coroutines.flow.Flow
 
 interface CompanyRepository {
     val remoteCompaniesFlow: Flow<DataResource<Unit>>
-    suspend fun loadCompanies()
+    suspend fun loadCompanies(): List<Long>
     fun getLocalCompaniesFlow(sort: Sort): Flow<PagingData<Company>>
     fun getCompanyFlow(id: Long): Flow<CompanyAndRevenue>
+    suspend fun findAllCompaniesIn(ids: List<Long>): List<Company>
+    suspend fun getAllIds(): List<Long>
 }

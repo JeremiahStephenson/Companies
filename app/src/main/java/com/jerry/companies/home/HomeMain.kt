@@ -10,7 +10,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -20,11 +19,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.paging.LoadState
+import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemsIndexed
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.jerry.companies.R
+import com.jerry.companies.cache.data.Company
 import com.jerry.companies.destinations.DetailsMainDestination
 import com.jerry.companies.repositories.Sort
 import com.jerry.companies.ui.common.EmbeddedErrorMessage
@@ -49,18 +51,22 @@ fun HomeMain(
 ) {
     LocalAppBarTitle.current(stringResource(R.string.app_name))
 
-    val homeState = getHomeState(viewModel)
-    val isLoading by remember { derivedStateOf { homeState.loading?.isLoading == true } }
+    val pagerState = viewModel.companiesPager.collectAsLazyPagingItems()
 
-    var isInErrorState by rememberSaveable { mutableStateOf(false) }
-    DisposableEffect(Unit) {
-        if (isInErrorState) {
-            viewModel.refresh()
-        }
-        onDispose {
-            isInErrorState = homeState.loading?.isError == true
-        }
-    }
+    val errorDialog by viewModel.errorFlow.collectAsStateWithLifecycle()
+
+//    val homeState = getHomeState(viewModel)
+//    val isLoading by remember { derivedStateOf { homeState.loading?.isLoading == true } }
+//
+//    var isInErrorState by rememberSaveable { mutableStateOf(false) }
+//    DisposableEffect(Unit) {
+//        if (isInErrorState) {
+//            viewModel.refresh()
+//        }
+//        onDispose {
+//            isInErrorState = homeState.loading?.isError == true
+//        }
+//    }
 
     // This is deprecated but the supported version from Google has some bugs
     // The indicator gets stuck sometimes until you scroll the list
@@ -70,8 +76,8 @@ fun HomeMain(
     //        onRefresh = { viewModel.refresh() }
     //    )
     SwipeRefresh(
-        state = rememberSwipeRefreshState(isLoading),
-        onRefresh = { viewModel.refresh() },
+        state = rememberSwipeRefreshState(pagerState.loadState.refresh is LoadState.Loading),
+        onRefresh = { pagerState.refresh() },
     ) {
     //Box(Modifier.pullRefresh(state)) {
         Box(
@@ -83,7 +89,7 @@ fun HomeMain(
                     .fillMaxSize(),
                 contentPadding = PaddingValues(top = 84.dp)
             ) {
-                itemsIndexed(homeState.dataPaging) { index, item ->
+                itemsIndexed(pagerState) { index, item ->
                     if (index > 0) {
                         Divider()
                     }
@@ -95,9 +101,13 @@ fun HomeMain(
                 }
             }
 
-            ErrorMessage(homeState) { viewModel.refresh() }
-            ListSorter(homeState) { viewModel.setSort(it) }
-            ErrorDialog(homeState)
+            ErrorMessage(pagerState) { pagerState.refresh() }
+//            ListSorter(homeState) { viewModel.setSort(it) }
+            if (errorDialog) {
+                SomethingWentWrongDialog(
+                    dismiss = { viewModel.dismissErrorDialog() }
+                )
+            }
         }
         // See comment above about the new pull to refresh from Google
 //        PullRefreshIndicator(
@@ -151,33 +161,16 @@ private fun SortButton(
 
 @Composable
 private fun ErrorMessage(
-    homeState: HomeState,
+    pagerState: LazyPagingItems<*>,
     onRetry: () -> Unit
 ) {
     val isErrorVisible = remember {
         derivedStateOf {
-            homeState.loading != null &&
-                    homeState.loading?.isError == true &&
-                    homeState.dataPaging.itemCount == 0
+            pagerState.itemCount == 0 && pagerState.loadState.refresh is LoadState.Error
         }
     }
     FadeAnimatedVisibility(visible = isErrorVisible.value) {
         EmbeddedErrorMessage(onRetry = onRetry)
-    }
-}
-
-@Composable
-private fun ErrorDialog(homeState: HomeState) {
-    val isErrorDialogVisible = remember {
-        derivedStateOf { homeState.loading?.isError == true && homeState.dataPaging.itemCount > 0 }
-    }
-    var showErrorDialog by remember(isErrorDialogVisible.value) {
-        mutableStateOf(isErrorDialogVisible.value)
-    }
-    if (showErrorDialog) {
-        SomethingWentWrongDialog(
-            dismiss = { showErrorDialog = false }
-        )
     }
 }
 
